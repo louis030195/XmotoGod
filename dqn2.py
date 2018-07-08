@@ -10,12 +10,12 @@ parser = argparse.ArgumentParser(
 # Important hparams
 #parser.add_argument("-g", "--game", type=str, default="Pong")
 parser.add_argument("-n", "--number-steps", type=int, default=1000000, help="total number of training steps")
-parser.add_argument("-e", "--explore-steps", type=int, default=100000, help="total number of explorartion steps")
+parser.add_argument("-e", "--explore-steps", type=int, default=100, help="total number of explorartion steps")
 parser.add_argument("-c", "--copy-steps", type=int, default=4096, help="number of training steps between copies of online DQN to target DQN")
 parser.add_argument("-l", "--learn-freq", type=int, default=4, help="number of game steps between each training step")
 
 # Irrelevant hparams
-parser.add_argument("-s", "--save-steps", type=int, default=10000, help="number of training steps between saving checkpoints")
+parser.add_argument("-s", "--save-steps", type=int, default=10, help="number of training steps between saving checkpoints")
 parser.add_argument("-r", "--render", action="store_true", default=False, help="render the game during training or testing")
 parser.add_argument("-t", "--test", action="store_true", default=False, help="test (no learning and minimal epsilon)")
 parser.add_argument("-v", "--verbosity", action="count", default=1, help="increase output verbosity")
@@ -56,10 +56,10 @@ def q_network(net, name, reuse=False):
 
 # Now for the training operations
 #learning_rate = 1e-4
-learning_rate = 1e-1
-training_start = 100  # start training after 10,000 game steps
+learning_rate = 1
+training_start = 10  # start training after 10,000 game steps
 discount_rate = 0.99
-batch_size = 64
+batch_size = 50
 
 with tf.variable_scope("train"):
     X_state = tf.placeholder(tf.float32,
@@ -138,6 +138,7 @@ with tf.Session() as sess:
     for step in range(args.number_steps):
         training_iter = global_step.eval()
         if done: # game over, start again
+            print("hi")
             if args.verbosity > 0:
                 print("Step {}/{} ({:.1f})% Training iters {}   "
                       "Loss {:5f}    Mean Max-Q {:5f}   Return: {:5f}".format(

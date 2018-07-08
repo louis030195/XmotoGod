@@ -20,16 +20,21 @@ from gym_xmoto.envs.capturedata2 import capturedata
 
 class XmotoEnv(gym.Env):
 
-  ACTION = ["w", "a", "s", "d", " ", "enter"]
+  ACTION = ["w", "a", "s", "d", " "]
+  #ACTION = ["w", " "]
   SCREEN_HEIGHT, SCREEN_WIDTH  = 720, 480
   TOTAL_WINS = 0
 
   # DRIVE -------------------------
   def _take_action(self, key):
+      if self.prevw == 1 :
+          pyautogui.keyUp("w")
       pyautogui.keyDown(str(key))
       if str(key) == "w": # find better ?? : store prev action and act until next
-          time.sleep(1)
-      pyautogui.keyUp(str(key))
+          self.prevw = 1
+      else :
+        pyautogui.keyUp(str(key))
+        self.prevw = 0
       return 0#.01 if str(key) == "w" else 0
 
   #  -------------------------
@@ -48,6 +53,7 @@ class XmotoEnv(gym.Env):
 
     self.viewer = None
     self.state = None
+    self.prevw = 1
     # WASD SPACE ENTER
     self.action_space = spaces.Discrete(len(self.ACTION))
     #self.observation_space = spaces.Box(0, 255, [120, 100, 3])
@@ -92,11 +98,13 @@ class XmotoEnv(gym.Env):
              However, official evaluations of your agent are not allowed to
              use this for learning.
     """
-    reward = -0.001 # speed up ?
+    reward = 0
     #if isinstance(action, int):
     self._take_action(self.ACTION[action])
-    if self._action_tostring(action) == "w":
-        reward += 0.1
+    #if self._action_tostring(action) == "w":
+    #    reward += 1
+    #else :
+    #    reward -= 1
     #self.state, dist_apple = self._get_state()
     self.state = self._get_state()
     #print("DIST APPLE : "+str(dist_apple))
@@ -104,25 +112,27 @@ class XmotoEnv(gym.Env):
     #    reward += 0.1
     #self._prev_dist_apple = dist_apple
 
-    dead = pyautogui.locateOnScreen('screenshots/dead.png') != None
-    win = pyautogui.locateOnScreen('screenshots/win.png') != None
+    dead = pyautogui.locateOnScreen('screenshots/dead.png',grayscale=True) != None
+    win = pyautogui.locateOnScreen('screenshots/win.png',grayscale=True) != None
 
     episode_over = dead | win
 
-    #print("ep over : "+str(episode_over))
-    if dead:
-        reward += -0.5
+    print("ep over : "+str(episode_over))
+    print("win : "+str(win))
+    print("dead : "+str(dead))
     if win:
-        reward += 0.5 # TODO : hit next level key ?
+        reward += 1 # TODO : hit next level key ?
         self.TOTAL_WINS += 1
         print("Total wins " + str(self.TOTAL_WINS))
+    if dead:
+        reward -= 1
 
 
     return self.state, reward, episode_over, {dead}
 
 
   def reset(self):
-    self._take_action(self.ACTION[5])
+    self._take_action("enter")
     #self.state = np.random.rand(1,)
     #return np.array(self.state)
     #self.state, dist_apple = self._get_state()

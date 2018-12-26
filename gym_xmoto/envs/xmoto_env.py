@@ -104,7 +104,7 @@ class XmotoEnv(gym.Env):
              use this for learning.
     """
 
-    reward = -0.1 # speed up ?
+    reward = 0.5 # speed up ?
     # Frameskip stuff
     if isinstance(self.frameskip, int):
       num_steps = self.frameskip
@@ -125,26 +125,27 @@ class XmotoEnv(gym.Env):
 
     win = self.template_matching('win', tmpState)
 
-    score = recognize_score(tmpState[1][0:0+30,100:100+30])
+    #score = recognize_score(tmpState[1][0:0+30,100:100+30])
 
-    print("score ", score, "previous ", self.previous_score)
+    #print("score ", score, "previous ", self.previous_score)
 
     episode_over = dead | win
 
-    if score != '':
-      if int(score) < self.previous_score:
-        reward += 100
-      self.previous_score = int(score)
+    #if score != '':
+    #  if int(score) < self.previous_score:
+    #    reward += 10
+    #  self.previous_score = int(score)
       
 
     if dead:
-        reward += -1
+        reward += -10
         self.previous_score = 0
     if win:
-        reward += 100
+        reward += 10
         self.TOTAL_WINS += 1
         self.previous_score = 0
         print("Total wins " + str(self.TOTAL_WINS))
+        print("Reward " + str(reward))
 
         """
         if self.TOTAL_WINS % 100 == 0: # Next level every 100 wins
@@ -153,6 +154,7 @@ class XmotoEnv(gym.Env):
         
 
 
+    print("reward" + str(reward))
     return tmpState[0], reward, episode_over, {dead}
 
   def reset(self):
@@ -161,7 +163,7 @@ class XmotoEnv(gym.Env):
     return self._get_state()[0]
 
   def render(self):
-    self.process = subprocess.Popen(["faketime", "-f", "+0d x100", "xmoto", "-l", "tut1"], preexec_fn=os.setsid)
+    self.process = subprocess.Popen(["faketime", "-f", "+0d x10", "xmoto", "-l", "tut1"], preexec_fn=os.setsid)
     time.sleep(2)
     pyautogui.click(x=200, y=200)
 
@@ -170,7 +172,7 @@ class XmotoEnv(gym.Env):
 
   def next_level(self):
     os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
-    self.process = subprocess.Popen(["faketime", "-f", "+0d x100", "xmoto", "-l", self.levels[random.randint(0, len(self.levels)-1)][0:-1]],
+    self.process = subprocess.Popen(["faketime", "-f", "+0d x10", "xmoto", "-l", self.levels[random.randint(0, len(self.levels)-1)][0:-1]],
     preexec_fn=os.setsid)
     time.sleep(2)
     pyautogui.click(x=200, y=200)

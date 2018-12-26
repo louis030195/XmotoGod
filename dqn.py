@@ -55,11 +55,11 @@ def q_network(net, name, reuse=False):
     return net, trainable_vars
 
 # Now for the training operations
-learning_rate = 1e-7
+learning_rate = 1e-3
 #learning_rate = 1 if args.pretrain else 1e-2
-training_start = 100  # start training after 100 game steps
+training_start = 10  # start training after 100 game steps
 discount_rate = 0.99
-batch_size = 64
+batch_size = 16
 
 with tf.variable_scope("train"):
     X_state = tf.placeholder(tf.float32,
@@ -110,7 +110,9 @@ eps_max = 1.0 if not args.test else eps_min
 
 def epsilon_greedy(q_values, step):
     epsilon = max(eps_min, eps_max - (eps_max-eps_min) * step / args.explore_steps)
-    if np.random.rand() < epsilon:
+    if np.random.rand() < 0.5:
+        return 0
+    elif np.random.rand() < epsilon:
         return np.random.randint(env.action_space.n) # random action
     else:
         return np.argmax(q_values) # optimal action
@@ -153,14 +155,14 @@ with tf.Session() as sess:
         # Online DQN evaluates what to do
         q_values = online_q_values.eval(feed_dict={X_state: [state]})
         action = epsilon_greedy(q_values, step)
-
+        print(action)
         # Online DQN plays
         if args.pretrain and step * 2 < len(pretrain_actions):
             print(pretrain_actions[step * 2].split(',')[0])
             action = env.ACTION.index(pretrain_actions[step * 2].split(',')[0]) # * 2 because the keylogger
                                                      # Does \n between every key
 
-
+        print(action)
         next_state, reward, done, info = env.step(action)
         returnn += reward
 
